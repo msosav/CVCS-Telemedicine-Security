@@ -1,3 +1,6 @@
 cvcs
-compressed.lzw
+compressed.cvcs
 input_image.bmp
+decompressed_image.bmp
+Pipfile
+Pipfile.lock
