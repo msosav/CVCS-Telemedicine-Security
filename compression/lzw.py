@@ -33,6 +33,9 @@ class LZW:
                 current_string = combined_string
             else:
                 compressed_data.append(dictionary[current_string])
+                if dictionary_size >= 65536:
+                    dictionary = {chr(i): i for i in range(256)}
+                    dictionary_size = 256
                 dictionary[combined_string] = dictionary_size
                 dictionary_size += 1
                 current_string = symbol
@@ -69,6 +72,9 @@ class LZW:
             else:
                 raise ValueError(f'Bad compressed code: {code}')
             decompressed_data += current_string
+            if dictionary_size >= 65536:
+                dictionary = {i: chr(i) for i in range(256)}
+                dictionary_size = 256
             dictionary[dictionary_size] = previous_string + current_string[0]
             dictionary_size += 1
             previous_string = current_string
