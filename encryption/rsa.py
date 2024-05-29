@@ -117,7 +117,6 @@ class RSA:
         Encrypt data using a public key.
 
         Args:
-            public_key (tuple): The public key.
             data (bytes): The data to encrypt.
 
         Returns:
@@ -132,7 +131,6 @@ class RSA:
         Decrypt data using a private key.
 
         Args:
-            private_key (tuple): The private key.
             data (list): The data to decrypt.
 
         Returns:
@@ -143,10 +141,29 @@ class RSA:
         return decrypted_data
 
     def read_file(self, file_path):
+        """
+        Read a file as bytes.
+
+        Args:
+            file_path (str): The path to the file.
+
+        Returns:
+            bytes: The file data.
+        """
         with open(file_path, 'rb') as file:
             return file.read()
 
     def write_file(self, file_path, data):
+        """
+        Write data to a file.
+
+        Args:
+            file_path (str): The path to the file.
+            data (bytes): The data to write.
+
+        Returns:
+            None
+        """
         directory = os.path.dirname(file_path)
         if not os.path.exists(directory):
             os.makedirs(directory)
@@ -154,6 +171,15 @@ class RSA:
             file.write(data)
 
     def encrypt_file(self, file_path):
+        """
+        Encrypt a file using the public key.
+
+        Args:
+            file_path (str): The path to the file.
+
+        Returns:
+            None
+        """
         file_data = self.read_file(file_path)
         encrypted_data = self.encrypt_data(file_data)
         encrypted_hex = ''.join([format(byte, '04x')
@@ -161,6 +187,12 @@ class RSA:
         self.write_file(self.encrypted_path, encrypted_hex.encode())
 
     def decrypt_file(self):
+        """
+        Decrypt a file using the private key.
+
+        Returns:
+            None
+        """
         encrypted_hex = self.read_file(self.encrypted_path).decode()
         encrypted_data = [int(encrypted_hex[i:i+4], 16)
                           for i in range(0, len(encrypted_hex), 4)]
