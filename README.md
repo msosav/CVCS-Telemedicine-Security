@@ -67,9 +67,21 @@ This command will:
 │   ├── __init__.py
 │   └── lzw.py
 ├── docs
-│   └── compression
-│       ├── image.py.md
-│       └── lzw.py.md
+│   ├── compression
+│   │   ├── image.py.md
+│   │   └── lzw.py.md
+│   └── encryption
+│       └── rsa.py.md
+├── encryption
+│   ├── __init__.py
+│   └── rsa.py
+├── images
+│   └── input.bmp
 ├── main.py
-└── README.md
+├── README.md
+└── results
+    ├── compressed.lzw
+    ├── decompressed.bmp
+    ├── decrypted.lzw
+    └── encrypted.rsa
 ```
