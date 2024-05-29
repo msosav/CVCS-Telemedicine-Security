@@ -1,6 +1,5 @@
 import random
 import os
-from PIL import Image
 
 def is_prime(n):
     if n <= 1:
@@ -74,21 +73,16 @@ def write_file(file_path, data):
         file.write(data)
 
 def encrypt_file(input_path, output_path, public_key):
-    image = Image.open(input_path)
-    image_data = image.tobytes()
-    
-    encrypted_data = encrypt_data(public_key, image_data)
+    file_data = read_file(input_path)
+    encrypted_data = encrypt_data(public_key, file_data)
     encrypted_hex = ''.join([format(byte, '04x') for byte in encrypted_data])
-    
     write_file(output_path, encrypted_hex.encode())
 
-def decrypt_file(input_path, output_path, private_key, mode, size):
+def decrypt_file(input_path, output_path, private_key):
     encrypted_hex = read_file(input_path).decode()
     encrypted_data = [int(encrypted_hex[i:i+4], 16) for i in range(0, len(encrypted_hex), 4)]
-    
     decrypted_data = decrypt_data(private_key, encrypted_data)
-    image_from_bytes = Image.frombytes(mode, size, bytes(decrypted_data))
-    image_from_bytes.save(output_path)
+    write_file(output_path, bytes(decrypted_data))
 
 # Ejemplo de uso
 p = 61  # Un número primo pequeño
@@ -99,16 +93,11 @@ print("Clave pública:", public_key)
 print("Clave privada:", private_key)
 
 # Leer imagen BMP
-input_image_path = '/home/valeria/CVCS-Telemedicine-Security/images/output.bmp'
+input_file_path = '/home/valeria/CVCS-Telemedicine-Security/compressed/output.cvcs'
 encrypted_file_path = '/home/valeria/CVCS-Telemedicine-Security/data/encrypted.bin'
-decrypted_image_path = '/home/valeria/CVCS-Telemedicine-Security/images/decrypted.bmp'
+decrypted_file_path = '/home/valeria/CVCS-Telemedicine-Security/images/decrypted.cvcs'
 
-image = Image.open(input_image_path)
-
-mode = image.mode
-size = image.size
-
-encrypt_file(input_image_path, encrypted_file_path, public_key)
-decrypt_file(encrypted_file_path, decrypted_image_path, private_key, mode, size)
+encrypt_file(input_file_path, encrypted_file_path, public_key)
+decrypt_file(encrypted_file_path, decrypted_file_path, private_key)
 
 print("Encriptación y desencriptación completadas.")
