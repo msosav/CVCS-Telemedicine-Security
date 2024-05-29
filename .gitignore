@@ -4,3 +4,4 @@ input_image.bmp
 decompressed_image.bmp
 Pipfile
 Pipfile.lock
+__pycache__/**
