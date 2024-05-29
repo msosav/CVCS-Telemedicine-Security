@@ -52,14 +52,41 @@ def generate_keypair(p, q):
     d = mod_inverse(e, phi)
     return ((e, n), (d, n))
 
-def encrypt_data(public_key, data):
+'''def encrypt_data(public_key, data):
     e, n = public_key
     encrypted_data = [pow(byte, e, n) % 256 for byte in data]  # Aplicar módulo 256
     return encrypted_data
 
+
 def decrypt_data(private_key, data):
     d, n = private_key
     decrypted_data = [pow(byte, d, n) % 256 for byte in data]  # Aplicar módulo 256
+    return decrypted_data
+
+def encrypt_data(public_key, data):
+    e, n = public_key
+    encrypted_data = []
+    for byte in data:
+        encrypted_byte = pow(byte, e, n)
+        encrypted_data.append(encrypted_byte)
+    return encrypted_data
+
+def decrypt_data(private_key, data):
+    d, n = private_key
+    decrypted_data = []
+    for byte in data:
+        decrypted_byte = pow(byte, d, n)
+        decrypted_data.append(decrypted_byte)
+    return decrypted_data'''
+
+def encrypt_data(public_key, data):
+    e, n = public_key
+    encrypted_data = [pow(byte, e, n) for byte in data]
+    return encrypted_data
+
+def decrypt_data(private_key, data):
+    d, n = private_key
+    decrypted_data = [pow(byte, d, n) for byte in data]
     return decrypted_data
 
 def read_file(file_path):
@@ -73,6 +100,23 @@ def write_file(file_path, data):
     with open(file_path, 'wb') as file:
         file.write(data)
 
+def encrypt_file(input_path, output_path, public_key):
+    image = Image.open(input_path)
+    image_data = image.tobytes()
+    
+    encrypted_data = encrypt_data(public_key, image_data)
+    encrypted_hex = ''.join([format(byte, '04x') for byte in encrypted_data])
+    
+    write_file(output_path, encrypted_hex.encode())
+
+def decrypt_file(input_path, output_path, private_key, mode, size):
+    encrypted_hex = read_file(input_path).decode()
+    encrypted_data = [int(encrypted_hex[i:i+4], 16) for i in range(0, len(encrypted_hex), 4)]
+    
+    decrypted_data = decrypt_data(private_key, encrypted_data)
+    image_from_bytes = Image.frombytes(mode, size, bytes(decrypted_data))
+    image_from_bytes.save(output_path)
+
 # Ejemplo de uso
 p = 61  # Un número primo pequeño
 q = 53  # Otro número primo pequeño
@@ -82,22 +126,31 @@ print("Clave pública:", public_key)
 print("Clave privada:", private_key)
 
 # Leer imagen BMP
-input_image_path = '/home/itsmonsa/CVCS-Telemedicine-Security/images/output.bmp'
-encrypted_file_path = '/home/itsmonsa/CVCS-Telemedicine-Security/data/encrypted.bin'
-decrypted_image_path = '/home/itsmonsa/CVCS-Telemedicine-Security/images/decrypted.bmp'
+input_image_path = '/home/valeria/CVCS-Telemedicine-Security/images/output.bmp'
+encrypted_file_path = '/home/valeria/CVCS-Telemedicine-Security/data/encrypted.bin'
+decrypted_image_path = '/home/valeria/CVCS-Telemedicine-Security/images/decrypted.bmp'
 
 image = Image.open(input_image_path)
 
-# Obtener los datos binarios de la imagen
+'''# Obtener los datos binarios de la imagen
 image_data = image.tobytes()
 
 # Encriptar datos binarios de la imagen
 encrypted_data = encrypt_data(public_key, image_data)
 write_file(encrypted_file_path, bytes(encrypted_data))
 
+# Leer los datos encriptados
+encrypted_data = read_file(encrypted_file_path)
+
 # Desencriptar datos binarios encriptados
 decrypted_data = decrypt_data(private_key, encrypted_data)
 image_from_bytes = Image.frombytes(image.mode, image.size, bytes(decrypted_data))
-image_from_bytes.save(decrypted_image_path)
+image_from_bytes.save(decrypted_image_path)'''
+
+mode = image.mode
+size = image.size
+
+encrypt_file(input_image_path, encrypted_file_path, public_key)
+decrypt_file(encrypted_file_path, decrypted_image_path, private_key, mode, size)
 
 print("Encriptación y desencriptación completadas.")
