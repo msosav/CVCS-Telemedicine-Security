@@ -1,5 +1,6 @@
 import argparse
 from compression.lzw import LZW
+from encryption import rsa
 
 
 def parse_arguments():
@@ -16,4 +17,5 @@ if __name__ == '__main__':
     args = parse_arguments()
     lzw = LZW(args.image_path)
     lzw.compress(args.compressed_path)
+    #rsa(args.compressed_path)
     lzw.decompress(args.compressed_path, args.decompressed_image_path)
