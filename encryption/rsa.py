@@ -52,33 +52,6 @@ def generate_keypair(p, q):
     d = mod_inverse(e, phi)
     return ((e, n), (d, n))
 
-'''def encrypt_data(public_key, data):
-    e, n = public_key
-    encrypted_data = [pow(byte, e, n) % 256 for byte in data]  # Aplicar módulo 256
-    return encrypted_data
-
-
-def decrypt_data(private_key, data):
-    d, n = private_key
-    decrypted_data = [pow(byte, d, n) % 256 for byte in data]  # Aplicar módulo 256
-    return decrypted_data
-
-def encrypt_data(public_key, data):
-    e, n = public_key
-    encrypted_data = []
-    for byte in data:
-        encrypted_byte = pow(byte, e, n)
-        encrypted_data.append(encrypted_byte)
-    return encrypted_data
-
-def decrypt_data(private_key, data):
-    d, n = private_key
-    decrypted_data = []
-    for byte in data:
-        decrypted_byte = pow(byte, d, n)
-        decrypted_data.append(decrypted_byte)
-    return decrypted_data'''
-
 def encrypt_data(public_key, data):
     e, n = public_key
     encrypted_data = [pow(byte, e, n) for byte in data]
@@ -131,21 +104,6 @@ encrypted_file_path = '/home/valeria/CVCS-Telemedicine-Security/data/encrypted.b
 decrypted_image_path = '/home/valeria/CVCS-Telemedicine-Security/images/decrypted.bmp'
 
 image = Image.open(input_image_path)
-
-'''# Obtener los datos binarios de la imagen
-image_data = image.tobytes()
-
-# Encriptar datos binarios de la imagen
-encrypted_data = encrypt_data(public_key, image_data)
-write_file(encrypted_file_path, bytes(encrypted_data))
-
-# Leer los datos encriptados
-encrypted_data = read_file(encrypted_file_path)
-
-# Desencriptar datos binarios encriptados
-decrypted_data = decrypt_data(private_key, encrypted_data)
-image_from_bytes = Image.frombytes(image.mode, image.size, bytes(decrypted_data))
-image_from_bytes.save(decrypted_image_path)'''
 
 mode = image.mode
 size = image.size
