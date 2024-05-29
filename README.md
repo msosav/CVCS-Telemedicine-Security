@@ -1,4 +1,4 @@
-# CVCS Telemedicine Security Project
+# CVCS - Telemedicine Security Project
 
 ## Overview
 
