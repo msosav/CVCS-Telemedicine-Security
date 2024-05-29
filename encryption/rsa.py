@@ -1,5 +1,6 @@
 import random
-import base64
+import os
+from PIL import Image
 
 def is_prime(n):
     if n <= 1:
@@ -51,40 +52,26 @@ def generate_keypair(p, q):
     d = mod_inverse(e, phi)
     return ((e, n), (d, n))
 
-def encrypt_block(public_key, block):
+def encrypt_data(public_key, data):
     e, n = public_key
-    return [pow(byte, e, n) for byte in block]
+    encrypted_data = [pow(byte, e, n) % 256 for byte in data]  # Aplicar módulo 256
+    return encrypted_data
 
-def decrypt_block(private_key, block):
+def decrypt_data(private_key, data):
     d, n = private_key
-    return [pow(byte, d, n) for byte in block]
+    decrypted_data = [pow(byte, d, n) % 256 for byte in data]  # Aplicar módulo 256
+    return decrypted_data
 
 def read_file(file_path):
     with open(file_path, 'rb') as file:
         return file.read()
 
 def write_file(file_path, data):
+    directory = os.path.dirname(file_path)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
     with open(file_path, 'wb') as file:
         file.write(data)
-
-def encode_base64(data):
-    byte_data = b''.join(num.to_bytes((num.bit_length() + 7) // 8, 'big') for num in data)
-    return base64.b64encode(byte_data)
-
-def decode_base64(data, block_size):
-    byte_data = base64.b64decode(data)
-    num_length = (block_size.bit_length() + 7) // 8
-    return [int.from_bytes(byte_data[i:i + num_length], 'big') for i in range(0, len(byte_data), num_length)]
-
-# Funciones para manejar bloques de datos
-def split_blocks(data, block_size):
-    return [data[i:i + block_size] for i in range(0, len(data), block_size)]
-
-def join_blocks(blocks):
-    return b''.join(blocks)
-
-def convert_to_bytes(block):
-    return bytes([num % 256 for num in block])
 
 # Ejemplo de uso
 p = 61  # Un número primo pequeño
@@ -94,37 +81,23 @@ public_key, private_key = generate_keypair(p, q)
 print("Clave pública:", public_key)
 print("Clave privada:", private_key)
 
+# Leer imagen BMP
+input_image_path = '/home/itsmonsa/CVCS-Telemedicine-Security/images/output.bmp'
+encrypted_file_path = '/home/itsmonsa/CVCS-Telemedicine-Security/data/encrypted.bin'
+decrypted_image_path = '/home/itsmonsa/CVCS-Telemedicine-Security/images/decrypted.bmp'
 
-# Leer archivo .bmp
-input_file_path = '/home/valeria/CVCS-Telemedicine-Security/images/output.bmp'
-output_encrypted_path = '/home/valeria/CVCS-Telemedicine-Security/images/encrypted.bmp'
-output_decrypted_path = '/home/valeria/CVCS-Telemedicine-Security/images/decrypted.bmp'
+image = Image.open(input_image_path)
 
+# Obtener los datos binarios de la imagen
+image_data = image.tobytes()
 
-data = read_file(input_file_path)
-header, body = data[:54], data[54:]  # Separa el encabezado BMP y los datos del cuerpo
+# Encriptar datos binarios de la imagen
+encrypted_data = encrypt_data(public_key, image_data)
+write_file(encrypted_file_path, bytes(encrypted_data))
 
-# Dividir el cuerpo del archivo .bmp en bloques
-block_size = 256  # Tamaño del bloque (ajusta según sea necesario, debe ser menor que n)
-blocks = split_blocks(body, block_size)
-
-# Encriptar cada bloque del cuerpo del archivo .bmp
-encrypted_blocks = [encrypt_block(public_key, block) for block in blocks]
-encoded_encrypted_blocks = [encode_base64(block) for block in encrypted_blocks]
-
-# Escribir archivo encriptado
-write_file(output_encrypted_path, header + b''.join(encoded_encrypted_blocks))
-
-# Leer y desencriptar el archivo encriptado
-encrypted_data = read_file(output_encrypted_path)
-encoded_encrypted_blocks = split_blocks(encrypted_data[54:], len(base64.b64encode(b'\x00' * block_size)))
-encrypted_blocks = [decode_base64(block, block_size) for block in encoded_encrypted_blocks]
-decrypted_blocks = [decrypt_block(private_key, block) for block in encrypted_blocks]
-
-# Convertir los bloques descifrados a bytes
-decrypted_bytes = [convert_to_bytes(block) for block in decrypted_blocks]
-
-# Escribir archivo desencriptado
-write_file(output_decrypted_path, header + join_blocks(decrypted_bytes))
+# Desencriptar datos binarios encriptados
+decrypted_data = decrypt_data(private_key, encrypted_data)
+image_from_bytes = Image.frombytes(image.mode, image.size, bytes(decrypted_data))
+image_from_bytes.save(decrypted_image_path)
 
 print("Encriptación y desencriptación completadas.")
