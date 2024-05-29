@@ -1,103 +1,168 @@
 import random
 import os
 
-def is_prime(n):
-    if n <= 1:
-        return False
-    if n <= 3:
-        return True
-    if n % 2 == 0 or n % 3 == 0:
-        return False
-    i = 5
-    while i * i <= n:
-        if n % i == 0 or n % (i + 2) == 0:
+
+class RSA:
+    """
+    RSA implementation for encrypting and decrypting files.
+    """
+
+    def __init__(self, p, q, compressed_path, encrypted_path, decrypted_path):
+        """
+        Constructs all the necessary attributes for the RSA object.
+        """
+        self.public_key, self.private_key = self.generate_keypair(p, q)
+        self.compressed_path = compressed_path
+        self.encrypted_path = encrypted_path
+        self.decrypted_path = decrypted_path
+
+    def is_prime(self, n):
+        """
+        Check if a number is prime.
+
+        Args:
+            n (int): The number to check.
+
+        Returns:
+            bool: True if the number is prime, False otherwise.
+        """
+        if n <= 1:
             return False
-        i += 6
-    return True
+        if n <= 3:
+            return True
+        if n % 2 == 0 or n % 3 == 0:
+            return False
+        i = 5
+        while i * i <= n:
+            if n % i == 0 or n % (i + 2) == 0:
+                return False
+            i += 6
+        return True
 
-def gcd(a, b):
-    while b != 0:
-        a, b = b, a % b
-    return a
+    def gcd(self, a, b):
+        """
+        Calculate the greatest common divisor of two numbers.
 
-def mod_inverse(e, phi):
-    def egcd(a, b):
-        if a == 0:
-            return b, 0, 1
-        g, x1, y1 = egcd(b % a, a)
-        x = y1 - (b // a) * x1
-        y = x1
-        return g, x, y
+        Args:
+            a (int): The first number.
+            b (int): The second number.
 
-    g, x, y = egcd(e, phi)
-    if g != 1:
-        raise Exception('El inverso modular no existe.')
-    else:
-        return x % phi
+        Returns:
+            int: The greatest common divisor.
+        """
+        while b != 0:
+            a, b = b, a % b
+        return a
 
-def generate_keypair(p, q):
-    if not (is_prime(p) and is_prime(q)):
-        raise ValueError("Ambos números deben ser primos.")
-    
-    n = p * q
-    phi = (p - 1) * (q - 1)
-    
-    e = random.randrange(1, phi)
-    g = gcd(e, phi)
-    while g != 1:
+    def mod_inverse(self, e, phi):
+        """
+        Calculate the modular inverse of a number.
+
+        Args:
+            e (int): The number.
+            phi (int): The totient of the number.
+
+        Returns:
+            int: The modular inverse.
+        """
+        def egcd(a, b):
+            """
+            Calculate the extended Euclidean algorithm.
+
+            Args:
+                a (int): The first number.
+                b (int): The second number.
+
+            Returns:
+                tuple: The greatest common divisor and the coefficients.
+            """
+            if a == 0:
+                return b, 0, 1
+            g, x1, y1 = egcd(b % a, a)
+            x = y1 - (b // a) * x1
+            y = x1
+            return g, x, y
+        g, x, y = egcd(e, phi)
+        if g != 1:
+            raise Exception('Modular inverse does not exist.')
+        else:
+            return x % phi
+
+    def generate_keypair(self, p, q):
+        """
+        Generate a public and private key pair.
+
+        Args:
+            p (int): A prime number.
+            q (int): Another prime number.
+
+        Returns:
+            tuple: The public and private key pairs.
+        """
+        if not (self.is_prime(p) and self.is_prime(q)):
+            raise ValueError("Both numbers must be prime.")
+        n = p * q
+        phi = (p - 1) * (q - 1)
         e = random.randrange(1, phi)
-        g = gcd(e, phi)
+        g = self.gcd(e, phi)
+        while g != 1:
+            e = random.randrange(1, phi)
+            g = self.gcd(e, phi)
 
-    d = mod_inverse(e, phi)
-    return ((e, n), (d, n))
+        d = self.mod_inverse(e, phi)
+        return ((e, n), (d, n))
 
-def encrypt_data(public_key, data):
-    e, n = public_key
-    encrypted_data = [pow(byte, e, n) for byte in data]
-    return encrypted_data
+    def encrypt_data(self, data):
+        """
+        Encrypt data using a public key.
 
-def decrypt_data(private_key, data):
-    d, n = private_key
-    decrypted_data = [pow(byte, d, n) for byte in data]
-    return decrypted_data
+        Args:
+            public_key (tuple): The public key.
+            data (bytes): The data to encrypt.
 
-def read_file(file_path):
-    with open(file_path, 'rb') as file:
-        return file.read()
+        Returns:
+            list: The encrypted data.
+        """
+        e, n = self.public_key
+        encrypted_data = [pow(byte, e, n) for byte in data]
+        return encrypted_data
 
-def write_file(file_path, data):
-    directory = os.path.dirname(file_path)
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-    with open(file_path, 'wb') as file:
-        file.write(data)
+    def decrypt_data(self, data):
+        """
+        Decrypt data using a private key.
 
-def encrypt_file(input_path, output_path, public_key):
-    file_data = read_file(input_path)
-    encrypted_data = encrypt_data(public_key, file_data)
-    encrypted_hex = ''.join([format(byte, '04x') for byte in encrypted_data])
-    write_file(output_path, encrypted_hex.encode())
+        Args:
+            private_key (tuple): The private key.
+            data (list): The data to decrypt.
 
-def decrypt_file(input_path, output_path, private_key):
-    encrypted_hex = read_file(input_path).decode()
-    encrypted_data = [int(encrypted_hex[i:i+4], 16) for i in range(0, len(encrypted_hex), 4)]
-    decrypted_data = decrypt_data(private_key, encrypted_data)
-    write_file(output_path, bytes(decrypted_data))
+        Returns:
+            list: The decrypted data.
+        """
+        d, n = self.private_key
+        decrypted_data = [pow(byte, d, n) for byte in data]
+        return decrypted_data
 
-# Ejemplo de uso
-p = 61  # Un número primo pequeño
-q = 53  # Otro número primo pequeño
+    def read_file(self, file_path):
+        with open(file_path, 'rb') as file:
+            return file.read()
 
-public_key, private_key = generate_keypair(p, q)
-print("Clave pública:", public_key)
-print("Clave privada:", private_key)
+    def write_file(self, file_path, data):
+        directory = os.path.dirname(file_path)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        with open(file_path, 'wb') as file:
+            file.write(data)
 
-# Leer imagen BMP
-input_file_path = '/home/valeria/CVCS-Telemedicine-Security/compressed/output.cvcs'
-encrypted_file_path = '/home/valeria/CVCS-Telemedicine-Security/data/encrypted.bin'
-decrypted_file_path = '/home/valeria/CVCS-Telemedicine-Security/images/decrypted.cvcs'
+    def encrypt_file(self, file_path):
+        file_data = self.read_file(file_path)
+        encrypted_data = self.encrypt_data(file_data)
+        encrypted_hex = ''.join([format(byte, '04x')
+                                for byte in encrypted_data])
+        self.write_file(self.encrypted_path, encrypted_hex.encode())
 
-encrypt_file(input_file_path, encrypted_file_path, public_key)
-decrypt_file(encrypted_file_path, decrypted_file_path, private_key)
-
-print("Encriptación y desencriptación completadas.")
+    def decrypt_file(self):
+        encrypted_hex = self.read_file(self.encrypted_path).decode()
+        encrypted_data = [int(encrypted_hex[i:i+4], 16)
+                          for i in range(0, len(encrypted_hex), 4)]
+        decrypted_data = self.decrypt_data(encrypted_data)
+        self.write_file(self.decrypted_path, bytes(decrypted_data))
